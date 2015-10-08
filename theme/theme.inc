@@ -37,6 +37,8 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
  * 
  * We reimplement this in order to pass in custom settings via
  * $variables['settings'].
+ *
+ * @see islandora_openseadragon_preprocess_islandora_openseadragon_viewer()
  */
 function _openseadragon_paged_viewer($variables) {
   // Variable fedora_object included in results, but not used.
