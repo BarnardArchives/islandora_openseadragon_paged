@@ -9,7 +9,7 @@
  * Implements hook_preprocess_theme().
  */
 function template_preprocess_islandora_paged_seadragon_viewer(array &$variables) {
-  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+  module_load_include('inc', 'islandora', 'includes/authtokens');
 
   $output = '';
   $object = $variables['object'];
@@ -17,8 +17,12 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
   $identifiers = array();
   // Populate $identifiers.
   foreach ($pages as $pid => $page) {
-    $page_metadata = islandora_paged_content_get_page_metadata_from_djatoka($pid);
-    $identifiers[] = $page_metadata['identifier'];
+    $identifiers[] = url("islandora/object/{$pid}/datastream/JP2/view", array(
+      'absolute' => TRUE,
+      'query' => array(
+        'token' => islandora_get_object_token($pid, 'JP2', 2),
+      ),
+    ));
   }
   ksort($identifiers);
   // Extra settings to pass to the OpenSeadragon viewer.
