@@ -26,7 +26,7 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
         'query' => array(
           'token' => islandora_get_object_token($pid, 'JP2', 2),
         ),
-      ),
+      )
     ));
   }
   ksort($identifiers);
