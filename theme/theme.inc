@@ -3,6 +3,9 @@
 /**
  * @file
  * Theme functions for islandora_openseadragon_paged.
+ * 
+ * @TODO: Consider using normal OSD and hooking, passing in desired settings.
+ * Last update 2018-06-19, br2490 - updated OSD paged for Islandora versions >1.09. Still uses deprecated calls.
  */
 
 /**
@@ -12,15 +15,17 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
   module_load_include('inc', 'islandora', 'includes/authtokens');
   module_load_include('inc', 'islandora_openseadragon', 'includes/utilities');
 
-  $output = '';
   $pages = $variables['pages'];
   $library_path = libraries_get_path('openseadragon');
   $module_path = drupal_get_path('module', 'islandora_openseadragon');
 
-  // Populate tileSources with pages. This is a hack as Islandora OSD prefers a call to islandora_openseadragon_tile_source();
+  $primary_pid = $variables['object']->id;
+
+  // Populate tileSources with pages.
   $identifiers = array();
   foreach ($pages as $pid => $page) {
-    $identifiers[] = islandora_openseadragon_identifier_tile_source(
+    // @NOTE: islandora_openseadragon_identifier_tile_source() is deprecated, see Islandora OSD v1.11, inc/utilies.inc.
+    $tile_source = islandora_openseadragon_identifier_tile_source(
       url("islandora/object/{$pid}/datastream/JP2/view", array(
         'absolute' => TRUE,
         'query' => array(
@@ -28,11 +33,12 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
         ),
       )
     ));
+    $tile_source['overlays'] = islandora_openseadragon_viewer_query_solr_for_overlays($pid);
+    $variables['tile_sources'][] = $tile_source;
   }
   ksort($identifiers);
 
-  $variables['tile_sources'] = $identifiers;
-  $variables['pid'] = $variables['object']->id;
+  $variables['pid'] = $primary_pid;
   $variables['id'] = $variables['viewer_id'] = 'islandora-openseadragon';
   $variables['settings'] = array(
     'pid' => $variables['pid'],
@@ -47,15 +53,13 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
       'prefixUrl' => file_create_url("{$library_path}/images/"),
       'tileSources' => $variables['tile_sources'],
       'sequenceMode' => true,
-      'preserveViewport' => true,
+      // 'preserveViewport' => true,
       'showReferenceStrip' => true,
       'referenceStripSizeRatio' => '0.15',
-      'overlays' => islandora_openseadragon_viewer_query_solr_for_overlays($variables['pid']),
     ) + islandora_openseadragon_get_settings()
   );
 
-  $output .= _openseadragon_paged_viewer(array('pid' => $variables['pid'], 'id' => $variables['viewer_id'], 'settings' => $variables['settings']));
-  $variables['viewer'] = $output;
+  $variables['viewer'] = _openseadragon_paged_viewer($variables);
 }
 
 /**
@@ -63,8 +67,6 @@ function template_preprocess_islandora_paged_seadragon_viewer(array &$variables)
  * 
  * We reimplement this in order to pass in custom settings via
  * $variables['settings'].
- * @NOTE as of 2018-06-18 this is technically deprecated as it is a direct copy of Islandora OSD.
- * @TODO deprecate or do something with this.
  *
  * @see islandora_openseadragon_preprocess_islandora_openseadragon_viewer()
  */
